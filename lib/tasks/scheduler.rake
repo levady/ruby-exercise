@@ -12,4 +12,10 @@ namespace :bot do
     TwitterBot.new.reply_tweets
     puts 'done.'
   end
+
+  desc 'Post and reply tweets simultaneously to conserve heroku dyno'
+  task :post_and_reply_tweets => :environment do
+    Rake::Task['bot:post_random_tweet'].execute
+    Rake::Task['bot:reply_tweets'].execute
+  end
 end
