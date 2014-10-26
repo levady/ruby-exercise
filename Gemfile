@@ -1,3 +1,4 @@
+ruby '2.1.2'
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -46,6 +47,8 @@ gem 'dotenv-rails', '~> 1.0.2',  :groups => [:development, :test]
 gem 'twitter', '~> 5.11.0'
 
 gem 'whatlanguage', '~> 1.0.5'
+
+gem 'unicorn', group: :production
 
 group :development, :test do
   gem 'byebug', '~> 3.5.1'
