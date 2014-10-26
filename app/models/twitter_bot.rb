@@ -45,12 +45,13 @@ private
 
   def anagrams
     tweet = find_random_tweet
+
     if tweet
       find_three_words = tweet.split(' ').sample(3, random: 1).join(' ')
-      conn = Faraday.new('http://www.anagramica.com')
-      response = JSON.parse(conn.get("/best/#{URI.encode(find_three_words)}").body)
+      url      = "http://www.anagramica.com/best/#{URI.encode(find_three_words)}"
+      response = get_response_from_url(url) || {}
 
-      if !response["best"].empty?
+      if response["best"].present?
         anagrams = response["best"].join(', ')
         @twitter_client.update("#{anagrams} is an anagram from these '#{find_three_words}' words")
       end
@@ -59,6 +60,7 @@ private
 
   def text_to_speech
     tweet = find_random_tweet
+
     if tweet
       tts_url = "http://translate.google.com/translate_tts?ie=UTF-8&tl=en&q=#{URI.encode(tweet[0, 100])}"
       @twitter_client.update("Random text to speech: #{tts_url}")
@@ -72,27 +74,53 @@ private
   end
 
   def random_word
-    conn = Faraday.new('http://randomword.setgetgo.com')
-    @twitter_client.update("Some random word: #{conn.get('/get.php').body.gsub("\r\n", "")}")
+    url  = 'http://randomword.setgetgo.com/get.php'
+    word = get_response_from_url(url).try(:gsub, "\r\n", "")
+    @twitter_client.update("Some random word: #{word}") if word
   end
 
   def battleship
-    conn  = Faraday.new('https://ajax.googleapis.com')
     query = ['Starwars Spaceship', 'Spaceship', 'World war 2 battleship'].sample(random: 1)
-    response = JSON.parse(conn.get("/ajax/services/search/images?v=1.0&q=#{URI.encode(query)}").body)
+    url   = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=#{URI.encode(query)}"
+    data  = get_response_from_url(url) || {}
 
-    data = response["responseData"]["results"]
-    if !data.empty?
-      image_url = data.collect { |image| image["url"] }.sample(random: 1)
+    if data["responseData"] && data["responseData"]["results"].present?
+      image_url = data["responseData"]["results"].collect { |image| image["url"] }
+        .sample(random: 1)
       @twitter_client.update("#{query} #{image_url}")
     end
   end
 
   def find_random_tweet
-    tweets = @twitter_client.search("*", :result_type => "mixed", lang: 'eu').take(100)
+    tweets = @twitter_client.search('*', result_type: 'mixed', lang: 'eu').take(100)
     tweets.collect do |tweet|
       tweet.text if tweet.text.gsub('\n\r', '').language == :english
     end.compact.sample(random: 1)
+  end
+
+  def get_response_from_url(url, timeout=5)
+    uri  = URI(url)
+    conn = Faraday.new("#{uri.scheme}://#{uri.host}")
+
+    response = conn.get do |req|
+      req.options.timeout = timeout
+      req.path = uri.path
+
+      if uri.query
+        params = {}
+        CGI.parse(uri.query).each do |key, value|
+          params[key] = value.first
+        end
+        req.params = params
+      end
+    end
+
+    JSON.parse(response.body)
+
+  rescue JSON::ParserError
+    response.body
+  rescue Faraday::TimeoutError
+    nil
   end
 
 end
