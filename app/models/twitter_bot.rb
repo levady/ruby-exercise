@@ -52,7 +52,12 @@ private
       response = get_response_from_url(url) || {}
 
       if response["best"].present?
-        anagrams = response["best"].join(', ')
+        anagrams = if response["best"].is_a?(Array)
+          response["best"].join(', ')
+        else
+          response["best"]
+        end
+
         @twitter_client.update("#{anagrams} is an anagram from these '#{find_three_words}' words")
       end
     end
