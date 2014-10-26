@@ -1,6 +1,5 @@
 source 'https://rubygems.org'
 
-
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.1.6'
 # Use pg as the database for Active Record
@@ -39,3 +38,15 @@ gem 'spring',        group: :development
 # gem 'debugger', group: [:development, :test]
 
 gem 'rails_12factor', group: :production
+
+# Use dotenv, Shim to load environment variables from .env into ENV in development.
+gem 'dotenv-rails', '~> 1.0.2',  :groups => [:development, :test]
+
+# A Ruby interface to the Twitter API.
+gem 'twitter', '~> 5.11.0'
+
+gem 'whatlanguage', '~> 1.0.5'
+
+group :development, :test do
+  gem 'byebug', '~> 3.5.1'
+end
