@@ -24,7 +24,7 @@ class TwitterBot
   end
 
   def reply_tweets
-    twitter_id = TwitterMentionsTracker.last.try(:id)
+    twitter_id = TwitterMentionsTracker.last.try(:twitter_id)
 
     tweets = if twitter_id
       @twitter_client.mentions_timeline(since_id: twitter_id)
@@ -37,7 +37,7 @@ class TwitterBot
         @twitter_client.update("@#{tweet.user.screen_name} Hi, thanks for mentioning me =)")
       end
 
-      TwitterMentionsTracker.create(twitter_id: tweets.first.id)
+      TwitterMentionsTracker.find_or_create_by(twitter_id: tweets.first.id)
     end
   end
 
